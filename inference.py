@@ -32,8 +32,9 @@ def start():
     model = torch.hub.load('WongKinYiu/yolov7', 'custom', './best.pt' ,force_reload=False, trust_repo=True )
      
     # Declaring some variables    
-    TABLE_CONFIDENCE = 0.50
-    CELL_CONFIDENCE = 0.50
+    TABLE_CONFIDENCE = 0.2
+    CELL_CONFIDENCE = 0.2
+    CONFIDENCE = 0.2
     OUTPUT_DIR = './output'
 
     # Bounding Boxes color scheme
@@ -64,19 +65,25 @@ def start():
         res = []
         
         for column in df.columns:
-            if column != 'confidence' and column != 'name':     
+            if  column != 'name':     
                 li = df[column].tolist()
                 res.append(li)    
         
         res=np.asarray(res)
         #print(res)
-        b = np.vsplit(res, 5)
-        print(b)
+        b = np.vsplit(res, 6)
+        confidence = b[4].tolist()[0]
+        index = []
+        for idx,v in enumerate(confidence):
+            if v <CONFIDENCE:
+                index.append(idx)
+            else:
+                print("delete low confidence")
         xmin = b[1]
         ymin = b[0]
         xmax = b[3]
         ymax = b[2]
-        Class = b[4]
+        Class = b[5]
         x = xmin
         y = ymin
         width = np.subtract(ymax,ymin)
@@ -88,7 +95,6 @@ def start():
         Class = Class.astype(np.int32)
         arra = np.concatenate((Class,y,x,width,length),axis=0) 
         arra = arra.T
-        print(arra)
             
         table_bboxes = []
         cell_bboxes = []
@@ -117,7 +123,10 @@ def start():
         image = output_path.split('/')[-1]
         image_filename = str(Path(i).stem)
         cv2.imwrite(f'{OUTPUT_DIR}/{image}.jpg', image_new)
-           
+        print(arra)
+        print(f"delete index {index}")
+        arra = np.delete(arra,index,axis=0)
+        print(arra)
         MC.medium_cut(f'{img_path}/{image_filename}.exr', arra.tolist(),f'{ldr_path}/upload.jpg')
         
 if __name__ == '__main__':

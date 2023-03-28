@@ -9,7 +9,7 @@ final_area = list()
 final_point = list()
 # 最後的輸出 光源的位置 一個框框配一個 box_type class
 count_box = list()
-
+LOW_LIGHT = 0.2
 #input a,b,c :  RGB float
 def lum(a,b,c):
     #return max(0,max(a,max(b,c)-0.95)/(1-0.95))# 用inference 跑出alpha 的公式 除法和減法似乎沒差
@@ -151,19 +151,21 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
         # cv2.rectangle(origin2,(i[0],i[1]),(i[0]+i[2],i[1]+i[3]),(0,0,255),1)
         # cv2.putText(origin2, count_box[cnt].type, (i[0],i[1]-5), cv2.FONT_HERSHEY_SIMPLEX, 0.2, (225,0,0), 0)
         if count_box[cnt].type == "Area":
-            final_area.append(count_box[cnt].accum[2]) #取出遞回次數 3 的所有光源
-            for v in count_box[cnt].accum[2]:
+            final_area.append(count_box[cnt].accum[3]) #取出遞回次數 3 的所有光源
+            for v in count_box[cnt].accum[3]:
                 #cv2.circle(origin2, center=(v[1], v[0]), radius=0, color=(0, 0, 255))
-                if(v[2]>0.3):
+                if(v[2]>LOW_LIGHT):
                     tar = dict()
                     tar["type"] = "Area"
                     tar["position"] = [v[0],v[1]] # x y
                     tar["color"] = list(reversed(origin2[:,v[0],v[1]].tolist())) # rgb 現在這裡是存 hdr 的rgb 0~1 如果想要用 LDR 就改成 origin_image 0~255
                     tar["intensity"] = v[2]
                     light.append(tar)
+                else:
+                    print("Delete dark light")
                 pass
         else:
-            if(count_box[cnt].bright[2]>0.3):
+            if(count_box[cnt].bright[2]>LOW_LIGHT):
                 final_point.append(count_box[cnt].bright) # 取出最亮的點
                 tar = dict()
                 tar["type"] = "point"
@@ -171,6 +173,8 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
                 tar["color"] = list(reversed(origin2[:,count_box[cnt].bright[0],count_box[cnt].bright[1]].tolist()))# rgb
                 tar["intensity"] = count_box[cnt].bright[2]
                 light.append(tar)
+            else:
+                print("Delete dark light")
             # cv2.circle(origin2, center=(count_box[cnt].bright[1], count_box[cnt].bright[0]), radius=0, color=(0, 255, 0))
         # output_full = cv2.resize(origin2, (1024,512))
         # cv2.imshow('Result',output_full)
