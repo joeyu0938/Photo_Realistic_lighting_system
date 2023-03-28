@@ -98,7 +98,6 @@ def start():
             
         table_bboxes = []
         cell_bboxes = []
-        tempt = []
         for _, row in df.iterrows():
             if row['class'] == 0 and row['confidence'] > TABLE_CONFIDENCE:
                 table_bboxes.append([int(row['xmin']), int(row['ymin']),
@@ -127,7 +126,7 @@ def start():
         print(f"delete index {index}")
         arra = np.delete(arra,index,axis=0)
         print(arra)
-        MC.medium_cut(f'{img_path}/{image_filename}.exr', arra.tolist(),f'{ldr_path}/upload.jpg')
+        MC.medium_cut(f'{img_path}/{image_filename}.exr', arra.tolist(),f'{ldr_path}/137.jpg')
         
 if __name__ == '__main__':
     start()

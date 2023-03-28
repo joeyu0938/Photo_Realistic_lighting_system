@@ -121,11 +121,11 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
     if(len(debug_LDR_path)!=0):
         origin = cv2.imread(debug_LDR_path, cv2.IMREAD_UNCHANGED)
         origin2 = cv2.resize(origin, (512,256), interpolation=cv2.INTER_CUBIC)
-        origin2 = np.transpose(origin2,(2,0,1)).astype(np.float32)
+        origin2 = np.transpose(origin2,(2,0,1))
     else:
         origin2 = color
     
-    origin_image = np.transpose(origin2,(2,0,1)).astype(np.int_)
+    origin_image = np.transpose(origin2,(1,2,0))
     #cv2.imshow('origin', origin2)
     
     label_nolabel = list()
@@ -144,12 +144,12 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
         summed_table = sum_t(i[1],i[0],i[3]+1,i[2]+1,color) # 將框框獨立出來做出summed table
         sat_origin = sat_r(0,0,i[3],i[2],summed_table.I) #  初始化切割區域
         recursive(0,i[1],i[0],sat_origin,summed_table.I,4,cnt)
-        #sat_image = origin2[i[1]:i[1]+i[3]+1,i[0]:i[0]+i[2]+1]
-        # output = cv2.resize(sat_image, (1024,512))
+        sat_image = origin_image[i[1]:i[1]+i[3]+1,i[0]:i[0]+i[2]+1]
+        output = cv2.resize(sat_image, (1024,512))
         # cv2.imshow(f"{count_box[cnt].type}{cnt}",output)
         print(f"result{cnt} place from x: {i[1]} to {i[1]+i[3]+1} y:{i[0]} to {i[0]+i[2]+1} , same strength {len(final_place)}")
-        # cv2.rectangle(origin2,(i[0],i[1]),(i[0]+i[2],i[1]+i[3]),(0,0,255),1)
-        # cv2.putText(origin2, count_box[cnt].type, (i[0],i[1]-5), cv2.FONT_HERSHEY_SIMPLEX, 0.2, (225,0,0), 0)
+        # cv2.rectangle(origin_image,(i[0],i[1]),(i[0]+i[2],i[1]+i[3]),(0,0,255),1)
+        # cv2.putText(origin_image, count_box[cnt].type, (i[0],i[1]-5), cv2.FONT_HERSHEY_SIMPLEX, 0.2, (225,0,0), 0)
         if count_box[cnt].type == "Area":
             final_area.append(count_box[cnt].accum[3]) #取出遞回次數 3 的所有光源
             for v in count_box[cnt].accum[3]:
@@ -161,6 +161,7 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
                     tar["color"] = list(reversed(origin2[:,v[0],v[1]].tolist())) # rgb 現在這裡是存 hdr 的rgb 0~1 如果想要用 LDR 就改成 origin_image 0~255
                     tar["intensity"] = v[2]
                     light.append(tar)
+                    # cv2.circle(origin_image, center=(v[1], v[0]), radius=0, color=(0, 0, 255))
                 else:
                     print("Delete dark light")
                 pass
@@ -175,11 +176,11 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
                 light.append(tar)
             else:
                 print("Delete dark light")
-            # cv2.circle(origin2, center=(count_box[cnt].bright[1], count_box[cnt].bright[0]), radius=0, color=(0, 255, 0))
-        # output_full = cv2.resize(origin2, (1024,512))
+            cv2.circle(origin_image, center=(count_box[cnt].bright[1], count_box[cnt].bright[0]), radius=0, color=(0, 255, 0))
+        output_full = cv2.resize(origin_image, (1024,512))
         # cv2.imshow('Result',output_full)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
         cnt+=1
     final["lightDataList"] = light
     # json dumps 把 list 的dict 全部轉換成 json 的 list 格式
