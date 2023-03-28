@@ -1,0 +1,14 @@
+env/
+Loader/images_HDR/*.exr
+Loader/images_LDR/*.jpg
+Loader/to_predict/*.exr
+Loader/to_predict_bigfilter
+Loader/to_predict_tonemap/*.jpg
+Loader/to_predict_tonemap_big
+HDR_nolight/*.exr
+models/*.pth
+tend_npy/*.npy
+testing_image/*.jpg
+testing_code/
+testing_image/
+best.pt
