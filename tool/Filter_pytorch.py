@@ -44,7 +44,7 @@ def set_parser():
     parser.add_argument('--Learning_rate', type=float,default=0.05, help='learning rate for 3d regression')
     parser.add_argument('--epoch', type=int,default=2, help='epoch for training 3d regression')
     parser.add_argument('--plot', type=bool,default=False, help='plot for 3d regression')
-    parser.add_argument('--filter_size', type=int, default=4, help='filter_size for 3d regression')
+    parser.add_argument('--filter_size', type=int, default=2, help='filter_size for 3d regression')
     return parser
 
 #建立輸入參數

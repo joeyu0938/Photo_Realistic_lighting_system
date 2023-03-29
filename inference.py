@@ -126,7 +126,7 @@ def start():
         print(f"delete index {index}")
         arra = np.delete(arra,index,axis=0)
         print(arra)
-        MC.medium_cut(f'{img_path}/{image_filename}.exr', arra.tolist(),f'{ldr_path}/137.jpg')
+        MC.medium_cut(f'{img_path}/{image_filename}.exr', arra.tolist(),f'{ldr_path}/upload.jpg')
         
 if __name__ == '__main__':
     start()

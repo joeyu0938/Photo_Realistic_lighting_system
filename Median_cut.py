@@ -9,7 +9,7 @@ final_area = list()
 final_point = list()
 # 最後的輸出 光源的位置 一個框框配一個 box_type class
 count_box = list()
-LOW_LIGHT = 0.2
+LOW_LIGHT = 0.1
 #input a,b,c :  RGB float
 def lum(a,b,c):
     #return max(0,max(a,max(b,c)-0.95)/(1-0.95))# 用inference 跑出alpha 的公式 除法和減法似乎沒差
@@ -113,9 +113,13 @@ def recursive(times,start,end,sat:sat_r,sum,limit,box_id):
 
 # label_arr: label  0:y  1:x  2:width  3:height
 def medium_cut(image_path,label_arr,debug_LDR_path=""):
+    count_box.clear()
+    final_point.clear()
+    final_area.clear()
+    final_place.clear()
     global color
     color = cv2.imread(image_path,cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
-    color = np.transpose(color,(2,0,1)).astype(np.float32)
+    color = np.transpose(color,(2,0,1))
     #只讓光源區域進行median_cut cnt 是紀錄第幾個框框 
     cnt=0
     if(len(debug_LDR_path)!=0):
@@ -126,7 +130,7 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
         origin2 = color
     
     origin_image = np.transpose(origin2,(1,2,0))
-    #cv2.imshow('origin', origin2)
+    #cv2.imshow('origin', origin_image)
     
     label_nolabel = list()
     #光源的位置 一個框框配一個 box_type class
@@ -146,14 +150,14 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
         recursive(0,i[1],i[0],sat_origin,summed_table.I,4,cnt)
         sat_image = origin_image[i[1]:i[1]+i[3]+1,i[0]:i[0]+i[2]+1]
         output = cv2.resize(sat_image, (1024,512))
-        # cv2.imshow(f"{count_box[cnt].type}{cnt}",output)
+        #cv2.imshow(f"{count_box[cnt].type}{cnt}",output)
         print(f"result{cnt} place from x: {i[1]} to {i[1]+i[3]+1} y:{i[0]} to {i[0]+i[2]+1} , same strength {len(final_place)}")
-        # cv2.rectangle(origin_image,(i[0],i[1]),(i[0]+i[2],i[1]+i[3]),(0,0,255),1)
-        # cv2.putText(origin_image, count_box[cnt].type, (i[0],i[1]-5), cv2.FONT_HERSHEY_SIMPLEX, 0.2, (225,0,0), 0)
+        #cv2.rectangle(origin_image,(i[0],i[1]),(i[0]+i[2],i[1]+i[3]),(0,0,255),1)
+        #cv2.putText(origin_image, count_box[cnt].type, (i[0],i[1]-5), cv2.FONT_HERSHEY_SIMPLEX, 0.2, (225,0,0), 0)
         if count_box[cnt].type == "Area":
             final_area.append(count_box[cnt].accum[3]) #取出遞回次數 3 的所有光源
             for v in count_box[cnt].accum[3]:
-                #cv2.circle(origin2, center=(v[1], v[0]), radius=0, color=(0, 0, 255))
+                #cv2.circle(origin_image, center=(v[1], v[0]), radius=0, color=(0, 0, 255))
                 if(v[2]>LOW_LIGHT):
                     tar = dict()
                     tar["type"] = "Area"
@@ -161,7 +165,7 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
                     tar["color"] = list(reversed(origin2[:,v[0],v[1]].tolist())) # rgb 現在這裡是存 hdr 的rgb 0~1 如果想要用 LDR 就改成 origin_image 0~255
                     tar["intensity"] = v[2]
                     light.append(tar)
-                    # cv2.circle(origin_image, center=(v[1], v[0]), radius=0, color=(0, 0, 255))
+                    #cv2.circle(origin_image, center=(v[1], v[0]), radius=1, color=(0, 0, 255))
                 else:
                     print("Delete dark light")
                 pass
@@ -176,11 +180,11 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
                 light.append(tar)
             else:
                 print("Delete dark light")
-            cv2.circle(origin_image, center=(count_box[cnt].bright[1], count_box[cnt].bright[0]), radius=0, color=(0, 255, 0))
+            #cv2.circle(origin_image, center=(count_box[cnt].bright[1], count_box[cnt].bright[0]), radius=1, color=(0, 255, 0))
         output_full = cv2.resize(origin_image, (1024,512))
         # cv2.imshow('Result',output_full)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
         cnt+=1
     final["lightDataList"] = light
     # json dumps 把 list 的dict 全部轉換成 json 的 list 格式

@@ -59,6 +59,23 @@ def parse_arguments(args):
     parser.add_argument('--deringing', type=int, default=0, help='Enable low pass deringing filter for the predicted SH coefficients')    
     parser.add_argument('--dr_window', type=float, default='6.0')
     return parser.parse_known_args(args)
+def float_to_rgbe(image, *, channel_axis=-1):
+
+    # ensure channel-last
+    #image = np.moveaxis(image, channel_axis, -1)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) #BGR to RGB
+    brightest = np.maximum(np.maximum(image[...,0], image[...,1]), image[...,2])
+    mantissa = np.zeros_like(brightest)
+    exponent = np.zeros_like(brightest)
+    np.frexp(brightest, mantissa, exponent)
+    scaled_mantissa = mantissa * 256.0 / brightest  
+    rgbe = np.zeros((image.shape[0], image.shape[1], 4), dtype=np.uint8)
+    rgbe[...,0:3] = np.around(image[...,0:3] * scaled_mantissa[...,None])
+    rgbe[...,3] = np.around(exponent + 128) #原來是128調整這個會變亮
+    # restore original axis order
+    #image_rgbe = np.moveaxis(image_rgbe, -1, channel_axis)
+    print(rgbe.shape)
+    return rgbe
 
 def evaluate(
     ldr2hdr_module: torch.nn.Module,
@@ -109,7 +126,12 @@ def evaluate(
                 #cv2.imwrite('gamma.exr',np.transpose(g,(1,2,0)).astype(np.float32))
                 H = np.transpose(H,(1,2,0)).astype(np.float32)
                 H_origin = np.transpose(H_origin,(1,2,0)).astype(np.float32)
-                cv2.imwrite(f'./HDR_nolight/{in_filename}_nolight.exr', H)
+                f = open(f'./HDR_nolight/{in_filename}_nolight.hdr', "wb")
+                f.write(str.encode("#?RADIANCE\n# Made with Python & Numpy\nFORMAT=32-bit_rle_rgbe\n\n"))
+                f.write(str.encode("-Y {0} +X {1}\n".format(H.shape[0], H.shape[1])))
+                float_to_rgbe(H).tofile(f)
+                f.close()
+                #cv2.imwrite(f'./HDR_nolight/{in_filename}_nolight.hdr', H)
                 cv2.imwrite(f'{args.out_path}/{in_filename}.exr', H_origin)
                 H = np.transpose(H,(2,0,1)).astype(np.float32)
                 # alpha_H = get_alpha(np.copy(H),epi)

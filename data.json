@@ -1,95 +1,134 @@
 {
     "lightDataList": [
         {
-            "type": "point",
+            "type": "Area",
             "position": [
-                33,
-                161
+                203,
+                447
             ],
             "color": [
                 255,
                 255,
                 255
             ],
-            "intensity": 0.8181305027008057
+            "intensity": 0.5006750735938549
         },
         {
-            "type": "point",
+            "type": "Area",
             "position": [
-                34,
-                454
+                203,
+                452
             ],
             "color": [
-                255,
+                254,
                 255,
                 255
             ],
-            "intensity": 0.8142576218247414
+            "intensity": 0.49724609941244124
         },
         {
-            "type": "point",
+            "type": "Area",
             "position": [
-                59,
-                267
+                211,
+                447
             ],
             "color": [
                 255,
                 255,
                 255
             ],
-            "intensity": 0.565441967099905
+            "intensity": 0.4975297562479973
+        },
+        {
+            "type": "Area",
+            "position": [
+                212,
+                452
+            ],
+            "color": [
+                255,
+                255,
+                255
+            ],
+            "intensity": 0.4505820452570915
+        },
+        {
+            "type": "Area",
+            "position": [
+                203,
+                458
+            ],
+            "color": [
+                254,
+                255,
+                255
+            ],
+            "intensity": 0.48620641639828677
+        },
+        {
+            "type": "Area",
+            "position": [
+                203,
+                463
+            ],
+            "color": [
+                254,
+                255,
+                255
+            ],
+            "intensity": 0.48921742391586304
+        },
+        {
+            "type": "Area",
+            "position": [
+                213,
+                458
+            ],
+            "color": [
+                254,
+                255,
+                255
+            ],
+            "intensity": 0.4079856873750687
+        },
+        {
+            "type": "Area",
+            "position": [
+                212,
+                463
+            ],
+            "color": [
+                251,
+                255,
+                255
+            ],
+            "intensity": 0.39860808825492855
         },
         {
             "type": "point",
             "position": [
                 66,
-                85
+                53
             ],
             "color": [
                 255,
                 255,
                 255
             ],
-            "intensity": 0.607617246299982
+            "intensity": 0.3636001673042774
         },
         {
             "type": "point",
             "position": [
-                59,
-                351
+                86,
+                315
             ],
             "color": [
                 255,
                 255,
                 255
             ],
-            "intensity": 0.5627063109874726
-        },
-        {
-            "type": "point",
-            "position": [
-                66,
-                18
-            ],
-            "color": [
-                255,
-                255,
-                255
-            ],
-            "intensity": 0.5550846920907497
-        },
-        {
-            "type": "point",
-            "position": [
-                66,
-                173
-            ],
-            "color": [
-                255,
-                255,
-                190
-            ],
-            "intensity": 0.6313346300721168
+            "intensity": 0.21795107994973661
         }
     ]
 }
