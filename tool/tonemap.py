@@ -13,7 +13,6 @@ def tonemap(path,output_path):
     for i in tqdm(dir):
         file_name = Path(i).stem # 取得除去副檔名的檔名
         im = cv2.imread(i, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
-
         tonemapDurand = cv2.createTonemap(gamma = 2.2)
         ldrDurand = tonemapDurand.process(im)
         # output

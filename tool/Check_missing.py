@@ -3,8 +3,8 @@ import glob
 import os
 dir = []
 x = []
-x.extend(glob.glob('C:/Users/User/Desktop/Trainig Dataset/Label/*txt'))
-dir.extend(glob.glob('C:/Users/User/Desktop/yolov7-main_test/data/lights/tends/train/*npy'))
+x.extend(glob.glob('C:/Users/User/Desktop/yolov7-main/data/lights/labels/whole/*txt'))
+dir.extend(glob.glob('./Loader/to_predict/*jpg'))
 names = [os.path.basename(y).split('.')[0] for y in x]
 cnt = 0
 for i in dir:

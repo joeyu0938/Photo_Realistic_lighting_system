@@ -90,7 +90,11 @@ class box_type:
 def recursive(times,start,end,sat:sat_r,sum,limit,box_id):
     if(times>limit):
         return
-    x,y = sat.centroid(sum)
+    try:
+        x,y = sat.centroid(sum)
+    except:
+        print("out of bound => error bug to fix")
+        return
     x+=start
     y+=end
     count_box[box_id].add([x,y],times) 
@@ -112,7 +116,7 @@ def recursive(times,start,end,sat:sat_r,sum,limit,box_id):
 # }
 
 # label_arr: label  0:y  1:x  2:width  3:height
-def medium_cut(image_path,label_arr,debug_LDR_path=""):
+def medium_cut(image_path,label_arr,debug_LDR_path="",depth = False):
     count_box.clear()
     final_point.clear()
     final_area.clear()
@@ -120,6 +124,8 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
     global color
     color = cv2.imread(image_path,cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
     color = np.transpose(color,(2,0,1))
+    if(depth == True):
+        depth_map = np.load('./Loader/image_depth/output.npy')
     #只讓光源區域進行median_cut cnt 是紀錄第幾個框框 
     cnt=0
     if(len(debug_LDR_path)!=0):
@@ -164,6 +170,8 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
                     tar["position"] = [v[0],v[1]] # x y
                     tar["color"] = list(reversed(origin2[:,v[0],v[1]].tolist())) # rgb 現在這裡是存 hdr 的rgb 0~1 如果想要用 LDR 就改成 origin_image 0~255
                     tar["intensity"] = v[2]
+                    if(depth == True):
+                        tar["depth"] = depth_map[v[0],v[1]].astype('float')
                     light.append(tar)
                     #cv2.circle(origin_image, center=(v[1], v[0]), radius=1, color=(0, 0, 255))
                 else:
@@ -177,6 +185,8 @@ def medium_cut(image_path,label_arr,debug_LDR_path=""):
                 tar["position"] = [count_box[cnt].bright[0],count_box[cnt].bright[1]] # x y
                 tar["color"] = list(reversed(origin2[:,count_box[cnt].bright[0],count_box[cnt].bright[1]].tolist()))# rgb
                 tar["intensity"] = count_box[cnt].bright[2]
+                if(depth == True):
+                    tar["depth"] = depth_map[count_box[cnt].bright[0],count_box[cnt].bright[1]].astype('float')
                 light.append(tar)
             else:
                 print("Delete dark light")

@@ -8,10 +8,10 @@ import shutil
 # output_path = 'C:/Users/User/Desktop/LTL_learning/Loader/to_predict_tonemap'
 # tonemap.tonemap(path,output_path)
 
-send_path = 'C:/Users/User/Desktop/yolov7-main/data/lights/images/tmp/*.exr'
-for number, filename in tqdm(enumerate(glob.glob(f'Loader/to_predict_tonemap_big/*.jpg'))):
+send_path = 'C:/Users/User/Desktop/yolov7-main/data/lights/images/tend_big_train'
+for number, filename in tqdm(enumerate(glob.glob(f'Loader/to_predict_tonemap/*.jpg'))):
         try:
-            shutil.copy2(filename, f"{send_path}/{os.path.basename(filename).split('.')[0].split('_')[1]}/{os.path.basename(filename).split('.')[0].split('_')[0]}.exr")
+            shutil.copy2(filename, f"{send_path}/{os.path.basename(filename).split('.')[0].split('_')[0]}.jpg")
             #os.remove(filename)
             # os.rename(filename, f"{send_path}/{os.path.basename(filename).split('.')[0].split('_')[1]}/\
             #     {os.path.basename(filename).split('.')[0].split('_')[0]}.exr")

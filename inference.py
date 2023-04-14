@@ -11,9 +11,11 @@ import Median_cut as MC
 import glob
 from tqdm import tqdm
 from pathlib import Path
+import time
 import numpy as np
 
 def start():
+    base_time = time.time()
     args_FP,remain= FP.set_parser().parse_known_args()
     args_L2H,unknown = L2H.parse_arguments(remain)
     #Setting file type 
@@ -30,7 +32,42 @@ def start():
     # Load fine-tuned custom model
   
     model = torch.hub.load('WongKinYiu/yolov7', 'custom', './best.pt' ,force_reload=False, trust_repo=True )
-     
+    #Depth part
+    #model_type = "DPT_Large"     # MiDaS v3 - Large     (highest accuracy, slowest inference speed)
+    model_type = "DPT_Hybrid"   # MiDaS v3 - Hybrid    (medium accuracy, medium inference speed)
+    #model_type = "MiDaS_small"  # MiDaS v2.1 - Small   (lowest accuracy, highest inference speed)
+
+    midas = torch.hub.load("intel-isl/MiDaS", model_type)
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    midas.to(device)
+    midas.eval()
+    midas_transforms = torch.hub.load("intel-isl/MiDaS", "transforms")
+    if model_type == "DPT_Large" or model_type == "DPT_Hybrid":
+        transform = midas_transforms.dpt_transform
+    else:
+        transform = midas_transforms.small_transform
+    img = cv2.imread('./Loader/images_LDR/upload.jpg')
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    input_batch = transform(img).to(device)
+    # 深度會抓不準因為下面的空白資料 必須要完整
+    with torch.no_grad():
+        prediction = midas(input_batch)
+        prediction = torch.nn.functional.interpolate(
+            prediction.unsqueeze(1),
+            size=(256,512),
+            mode="bicubic",
+            align_corners=False,
+        ).squeeze()
+    #normalize
+    output = prediction.cpu().numpy()
+    output = output/np.max(output)
+    np.save('./Loader/image_depth/output.npy', output)
+    cv2.imshow('depth',output)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    cv2.imwrite('depth.jpg',output*255)
+    
     # Declaring some variables    
     TABLE_CONFIDENCE = 0.2
     CELL_CONFIDENCE = 0.2
@@ -48,18 +85,21 @@ def start():
     
     
     # 將 to_predict 的結果先進行 tonemapping 之後再批量放進 model 中產生 label
-    img_path = './Loader/to_predict'
+    img_path = './Loader/images_HDR'
     ldr_path = './Loader/images_LDR'
     output_path = './Loader/to_predict_tonemap'
-    TM.tonemap(img_path,output_path)
+    #TM.tonemap(img_path,output_path)tonemap 會把pixel用糊
     
     
     # Run the Inference and draw predicted bboxes
     dir = []
-    dir.extend(glob.glob(f'{output_path}/*.jpg'))
+    dir.extend(glob.glob('./Loader/to_predict/*.jpg'))
     #print(dir)
     for i in tqdm(dir):
+        start_time = time.time()
+        print("Yolo model start")
         results = model(i)
+        print(f"Yolo model end in {time.time()-start_time} second")
         df = results.pandas().xyxy[0]
         #print(df)
         res = []
@@ -126,7 +166,8 @@ def start():
         print(f"delete index {index}")
         arra = np.delete(arra,index,axis=0)
         print(arra)
-        MC.medium_cut(f'{img_path}/{image_filename}.exr', arra.tolist(),f'{ldr_path}/upload.jpg')
+        MC.medium_cut(f'{img_path}/upload.exr', arra.tolist(),f'{ldr_path}/upload.jpg',depth=True)
+    print(f"Total time cost{time.time()-base_time}")
         
 if __name__ == '__main__':
     start()
