@@ -61,12 +61,13 @@ def start():
         ).squeeze()
     #normalize
     output = prediction.cpu().numpy()
-    output = output/np.max(output)
+    output[output<1] = 1
+    output = np.max(output)/output
     np.save('./Loader/image_depth/output.npy', output)
-    cv2.imshow('depth',output)
+    #cv2.imshow('depth',output)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
-    cv2.imwrite('depth.jpg',output*255)
+    cv2.imwrite('depth.jpg',output*8)
     
     # Declaring some variables    
     TABLE_CONFIDENCE = 0.2
@@ -117,8 +118,8 @@ def start():
         for idx,v in enumerate(confidence):
             if v <CONFIDENCE:
                 index.append(idx)
-            else:
                 print("delete low confidence")
+                
         xmin = b[1]
         ymin = b[0]
         xmax = b[3]

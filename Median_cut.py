@@ -12,8 +12,8 @@ count_box = list()
 LOW_LIGHT = 0.1
 #input a,b,c :  RGB float
 def lum(a,b,c):
-    #return max(0,max(a,max(b,c)-0.95)/(1-0.95))# 用inference 跑出alpha 的公式 除法和減法似乎沒差
-    return a*0.114 + b*0.587 + c*0.299 #可以改變 
+    #return max(0,max(a,max(b,c)-0.95)/(1-0.95))# 用LDR2HDR 跑出alpha 的公式 除法和減法似乎沒差
+    return a*0.114 + b*0.587 + c*0.299 #YIQ domain 
 
 # Summed table 
 class sum_t:
@@ -113,6 +113,7 @@ def recursive(times,start,end,sat:sat_r,sum,limit,box_id):
 #     "position":
 #     "color":
 #     "intensity":
+#     "depth":
 # }
 
 # label_arr: label  0:y  1:x  2:width  3:height
@@ -126,7 +127,7 @@ def medium_cut(image_path,label_arr,debug_LDR_path="",depth = False):
     color = np.transpose(color,(2,0,1))
     if(depth == True):
         depth_map = np.load('./Loader/image_depth/output.npy')
-    #只讓光源區域進行median_cut cnt 是紀錄第幾個框框 
+    #只讓光源區域進行median_cut // cnt 是紀錄第幾個框框 
     cnt=0
     if(len(debug_LDR_path)!=0):
         origin = cv2.imread(debug_LDR_path, cv2.IMREAD_UNCHANGED)
@@ -149,6 +150,7 @@ def medium_cut(image_path,label_arr,debug_LDR_path="",depth = False):
     print(label_nolabel)
     light = list()
     final = dict()
+    overlay = list()
     for i in label_nolabel:
          # 0:y 1:x 2:width 3:height
         summed_table = sum_t(i[1],i[0],i[3]+1,i[2]+1,color) # 將框框獨立出來做出summed table
@@ -157,26 +159,34 @@ def medium_cut(image_path,label_arr,debug_LDR_path="",depth = False):
         sat_image = origin_image[i[1]:i[1]+i[3]+1,i[0]:i[0]+i[2]+1]
         output = cv2.resize(sat_image, (1024,512))
         #cv2.imshow(f"{count_box[cnt].type}{cnt}",output)
+        duplicate = False
+        for x in overlay: # delete duplicate region of light
+            if i[1]>=x[1]-5 and i[1]+i[3]<=x[1]+x[3]+5 and  i[0]>=x[0]-5 and i[0]+i[2]<=x[0]+x[2]-5:
+                duplicate=True
+                break
+        if duplicate == True: 
+            print(f"delete {cnt} place from x: {i[1]} to {i[1]+i[3]+1} y:{i[0]} to {i[0]+i[2]+1} !!!!!! duplicated")
+            continue
         print(f"result{cnt} place from x: {i[1]} to {i[1]+i[3]+1} y:{i[0]} to {i[0]+i[2]+1} , same strength {len(final_place)}")
+        
         #cv2.rectangle(origin_image,(i[0],i[1]),(i[0]+i[2],i[1]+i[3]),(0,0,255),1)
         #cv2.putText(origin_image, count_box[cnt].type, (i[0],i[1]-5), cv2.FONT_HERSHEY_SIMPLEX, 0.2, (225,0,0), 0)
         if count_box[cnt].type == "Area":
-            final_area.append(count_box[cnt].accum[3]) #取出遞回次數 3 的所有光源
-            for v in count_box[cnt].accum[3]:
+            final_area.append(count_box[cnt].accum[2]) #取出遞回次數 2 的所有光源
+            for v in count_box[cnt].accum[2]:
                 #cv2.circle(origin_image, center=(v[1], v[0]), radius=0, color=(0, 0, 255))
                 if(v[2]>LOW_LIGHT):
                     tar = dict()
                     tar["type"] = "Area"
                     tar["position"] = [v[0],v[1]] # x y
                     tar["color"] = list(reversed(origin2[:,v[0],v[1]].tolist())) # rgb 現在這裡是存 hdr 的rgb 0~1 如果想要用 LDR 就改成 origin_image 0~255
-                    tar["intensity"] = v[2]
+                    tar["intensity"] = (summed_table.I[-1,-1]/summed_table.I.size)/len(count_box[cnt].accum[2])
                     if(depth == True):
                         tar["depth"] = depth_map[v[0],v[1]].astype('float')
                     light.append(tar)
                     #cv2.circle(origin_image, center=(v[1], v[0]), radius=1, color=(0, 0, 255))
                 else:
                     print("Delete dark light")
-                pass
         else:
             if(count_box[cnt].bright[2]>LOW_LIGHT):
                 final_point.append(count_box[cnt].bright) # 取出最亮的點
@@ -191,11 +201,12 @@ def medium_cut(image_path,label_arr,debug_LDR_path="",depth = False):
             else:
                 print("Delete dark light")
             #cv2.circle(origin_image, center=(count_box[cnt].bright[1], count_box[cnt].bright[0]), radius=1, color=(0, 255, 0))
-        output_full = cv2.resize(origin_image, (1024,512))
+        #output_full = cv2.resize(origin_image, (1024,512))
         # cv2.imshow('Result',output_full)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
         cnt+=1
+        overlay.append(i)
     final["lightDataList"] = light
     # json dumps 把 list 的dict 全部轉換成 json 的 list 格式
     #print(json.dumps(light, indent=4)) # indent 可以拿掉 不然寫檔案速度會掉很慢

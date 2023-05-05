@@ -104,16 +104,24 @@ def train(arr,tar_x,tar_y,parser,input):
 # demo 3D regression輸出的結果
 def draw(t,file_name,RGBIMAGE,parser):
     t = cv2.resize(t,(512,256)).astype('float32')
-    RGB = cv2.cvtColor(RGBIMAGE, cv2.COLOR_RGB2GRAY)
-    tonemapDurand = cv2.createTonemap(gamma = 2.2 )
+    # RGB = cv2.cvtColor(RGBIMAGE, cv2.COLOR_RGB2GRAY)
+    # RGB = np.stack((RGB,)*3, axis=-1)
+    RGBIMAGE = cv2.cvtColor(RGBIMAGE, cv2.COLOR_RGB2BGR)
+    tonemapDurand = cv2.createTonemap(gamma = 1.5)
     # RGB = tonemapDurand.process(RGB)
-    t[:,:,0] = t[:,:,0] + RGB
-    t[:,:,1] = t[:,:,1] + RGB
-    t[:,:,2] = t[:,:,2] + RGB 
+    # cv2.imshow('light',RGBIMAGE)
+    # cv2.imshow('light2',t)
+    # t[:,:,0] = t[:,:,0] + RGB
+    # t[:,:,1] = t[:,:,1] + RGB
+    # t[:,:,2] = t[:,:,2] + RGB 
+    dst = cv2.addWeighted(t,1.0,RGBIMAGE,0,0)
     # 直接轉換成jpg 然後clip 的filter會比tonemapping 的好
     t = np.clip(tonemapDurand.process(t) * 255, 0, 255).astype('uint8')  
     # cv2.imwrite(f'{parser.tend_output}/{file_name}.jpg', t)
-    cv2.imwrite(f'{parser.tend_output}/{file_name}.jpg', t)    
+    cv2.imwrite(f'{parser.tend_output}/{file_name}.jpg', t) 
+    # cv2.imshow('light3',t)   
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
     
     
     
