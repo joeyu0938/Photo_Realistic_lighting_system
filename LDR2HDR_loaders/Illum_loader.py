@@ -53,8 +53,8 @@ class Inference_Data(Dataset):
 		print(self.input_img.shape)
 		self.input_img = cv2.resize(self.input_img, (4096,2048), interpolation=cv2.INTER_LANCZOS4	)
 		self.input_img = cv2.resize(self.input_img, (2048,1024), interpolation=cv2.INTER_CUBIC		)
-		self.input_img = skimage.measure.block_reduce(self.input_img, block_size=(2, 2, 1), func=np.max)
-		# self.input_img = cv2.resize(self.input_img, (1024,512), interpolation=cv2.INTER_AREA	)
+		#self.input_img = skimage.measure.block_reduce(self.input_img, block_size=(2, 2, 1), func=np.max)
+		self.input_img = cv2.resize(self.input_img, (1024,512), interpolation=cv2.INTER_AREA	)
 		self.input_img = cv2.resize(self.input_img, (512,256), interpolation=cv2.INTER_NEAREST	)
 		self.to_tensor = transforms.ToTensor()
 		self.data_len = 1

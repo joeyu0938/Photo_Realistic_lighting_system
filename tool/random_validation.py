@@ -8,7 +8,7 @@ image_file_path = 'C:/Users/User/Desktop/yolov7-main/data/lights/images'
 label_dir = glob.glob(label_file_path+'/whole/*txt')
 image_dir = glob.glob(image_file_path+'/whole/*jpg')
 print(f"Label count {len(label_dir)} , image count {len(image_dir)}")
-k  = 100 # validation count
+k  = 150 # validation count
 x = random.sample(label_dir,k)
 y = set(label_dir) - set(x)
 print(f"pick {x}")

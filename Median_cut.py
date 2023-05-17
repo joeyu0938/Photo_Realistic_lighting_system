@@ -161,7 +161,7 @@ def medium_cut(image_path,label_arr,debug_LDR_path="",depth = False):
         #cv2.imshow(f"{count_box[cnt].type}{cnt}",output)
         duplicate = False
         for x in overlay: # delete duplicate region of light
-            if i[1]>=x[1]-5 and i[1]+i[3]<=x[1]+x[3]+5 and  i[0]>=x[0]-5 and i[0]+i[2]<=x[0]+x[2]-5:
+            if i[1]>=x[1]-5 and i[1]+i[3]<=x[1]+x[3]+5 and  i[0]>=x[0]-5 and i[0]+i[2]<=x[0]+x[2]+5: #還沒push
                 duplicate=True
                 break
         if duplicate == True: 

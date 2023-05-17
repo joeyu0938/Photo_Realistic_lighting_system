@@ -70,16 +70,15 @@ def start():
     cv2.imwrite('depth.jpg',output*8)
     
     # Declaring some variables    
-    TABLE_CONFIDENCE = 0.2
-    CELL_CONFIDENCE = 0.2
-    CONFIDENCE = 0.2
+    TABLE_CONFIDENCE = 0.1
+    CELL_CONFIDENCE = 0.1
+    CONFIDENCE = 0.1
     OUTPUT_DIR = './output'
 
     # Bounding Boxes color scheme
     ALPHA = 0.2
     TABLE_BORDER = (0, 0, 255)
-    CELL_FILL = (0, 0, 200)
-    CELL_BORDER = (0, 0, 255)
+    CELL_BORDER = (255, 0, 0)
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
@@ -152,12 +151,15 @@ def start():
         for table_bbox in table_bboxes:
             cv2.rectangle(image, (table_bbox[0], table_bbox[1]),
                         (table_bbox[2], table_bbox[3]), TABLE_BORDER, 1)
+            image = cv2.putText(image, "point", (table_bbox[0],  table_bbox[1] - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5,TABLE_BORDER , 1)
+
 
         for cell_bbox in cell_bboxes:
-            cv2.rectangle(overlay, (cell_bbox[0], cell_bbox[1]),
-                        (cell_bbox[2], cell_bbox[3]), CELL_FILL, -1)
             cv2.rectangle(image, (cell_bbox[0], cell_bbox[1]),
                         (cell_bbox[2], cell_bbox[3]), CELL_BORDER, 1)
+            image = cv2.putText(image, "Area", (cell_bbox[0], cell_bbox[1] - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5,CELL_BORDER , 1)
 
         image_new = cv2.addWeighted(overlay, ALPHA, image, 1-ALPHA, 0)
         image = output_path.split('/')[-1]
