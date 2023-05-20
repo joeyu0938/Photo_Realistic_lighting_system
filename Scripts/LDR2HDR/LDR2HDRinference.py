@@ -10,10 +10,9 @@ from pathlib import Path
 import numpy as np
 import torch
 #import torchvision
-import time
 from tqdm import tqdm
-from LDR2HDR_loaders.Illum_loader import IlluminationModule, Inference_Data
-from LDR2HDR_loaders.autoenc_ldr2hdr import LDR2HDR    
+from Scripts.LDR2HDR.LDR2HDR_loaders.Illum_loader import Inference_Data
+from Scripts.LDR2HDR.LDR2HDR_loaders.autoenc_ldr2hdr import LDR2HDR    
 from torch.utils.data import DataLoader
 
 def get_alpha(a,epi):
@@ -48,17 +47,15 @@ def get_H_origin(H,alpha,input_ldr,tar,gamma):
 def parse_arguments(args):
     usage_text = (
         "Inference script for Deep Lighting Environment Map Estimation from Spherical Panoramas"
-        "Usage:  python3 inference.py --input_path "
     )
     parser = argparse.ArgumentParser(description=usage_text)    
-    parser.add_argument('--input_path', type=str, default='./Loader/images_LDR', help="Input panorama color image file")
-    parser.add_argument('--out_path', type=str, default='./Loader/images_HDR', help='Output folder for the predicted environment map panorama')
+    parser.add_argument('--input_path', type=str, default='./Scripts/LDR2HDR/images_LDR', help="Input panorama color image file")
+    parser.add_argument('--out_path', type=str, default='./Scripts/LDR2HDR/images_HDR', help='Output folder for the predicted environment map panorama')
     parser.add_argument('-g','--gpu', type=str, default='0', help='GPU id of the device to use. Use -1 for CPU.')    
     parser.add_argument('--ldr2hdr_model', type=str, default='./models/ldr2hdr.pth', help='Pre-trained checkpoint file for ldr2hdr image translation module')
     parser.add_argument("--width", type=float, default=512, help = "Spherical panorama image width.")
-    parser.add_argument('--deringing', type=int, default=0, help='Enable low pass deringing filter for the predicted SH coefficients')    
-    parser.add_argument('--dr_window', type=float, default='6.0')
     return parser.parse_known_args(args)
+
 def float_to_rgbe(image, *, channel_axis=-1):
 
     # ensure channel-last
@@ -86,30 +83,29 @@ def evaluate(
         os.mkdir(args.out_path)
     dr = list()
     dr.extend(glob.glob(args.input_path + f'/*jpg'))
-    print(dr)
+    print(f'LDR2HDR From ....\n {dr}')
     for i in tqdm(dr):
+        #Check if exist
         finish_dir = glob.glob(f'{args.out_path}/*.exr')
         names = [os.path.basename(x).split('.')[0] for x in finish_dir]
         if os.path.basename(i).split('.')[0] in names:
             print(f"\n{i} exists...skip")
             continue
+        
+        # Setting output path and assertion
         p = Path(i)
         in_filename, in_file_extention = p.stem,p.suffix
         print(in_filename)
         assert in_file_extention in ['.png','.jpg']
         inference_data = Inference_Data(i)
-        out_path = args.out_path + os.path.basename(i)
-        out_filename, out_file_extension = os.path.splitext(out_path)
-        out_file_extension = '.exr'
-        out_path = out_filename + out_file_extension
-        dataloader = DataLoader(inference_data, batch_size=1, shuffle = False, num_workers = 1)
+        out_path = args.out_path + '/'+ in_filename + '.exr'
         
+        #running module
+        dataloader = DataLoader(inference_data, batch_size=1, shuffle = False, num_workers = 1)
         for i, data in enumerate(dataloader): # enumerate 數 list 裡面第幾個元素 
             input_img = data.to(device).float() #讀入img到cpu or gpu
             input_ldr = input_img.cpu().detach().numpy()[0] #因為numpy不能在gpu理運作所以要將ldr拉到cpu
-            #print(input_ldr.dtype)
             with torch.no_grad(): 
-                start_time = time.time()
                 right_rgb = ldr2hdr_module(input_img)
                 epi = 0.9#改這個是改變 gamma correction 和 HDR output domain 的 blending 比值
                 gamma = 2 #gamma correction (要先將範圍normalize 到 0,1)
@@ -126,20 +122,19 @@ def evaluate(
                 #cv2.imwrite('gamma.exr',np.transpose(g,(1,2,0)).astype(np.float32))
                 H = np.transpose(H,(1,2,0)).astype(np.float32)
                 H_origin = np.transpose(H_origin,(1,2,0)).astype(np.float32)
-                f = open(f'./HDR_nolight/{in_filename}_nolight.hdr', "wb")
+                f = open(f'./Scripts/LDR2HDR/HDR_nolight/{in_filename}_nolight.hdr', "wb")
                 f.write(str.encode("#?RADIANCE\n# Made with Python & Numpy\nFORMAT=32-bit_rle_rgbe\n\n"))
                 f.write(str.encode("-Y {0} +X {1}\n".format(H.shape[0], H.shape[1])))
                 float_to_rgbe(H).tofile(f)
                 f.close()
-                #cv2.imwrite(f'./HDR_nolight/{in_filename}_nolight.hdr', H)
-                cv2.imwrite(f'{args.out_path}/{in_filename}.exr', H_origin)
+                cv2.imwrite(out_path, H_origin)
                 H = np.transpose(H,(2,0,1)).astype(np.float32)
                 # alpha_H = get_alpha(np.copy(H),epi)
                 # cv2.imwrite('Alpha_no_light.exr',np.transpose(alpha_H,(1,2,0)).astype(np.float32))
             
 def main(args):
     device = torch.device("cuda:" + str(args.gpu) if (torch.cuda.is_available() and int(args.gpu) >= 0) else "cpu")    
-    print(device)
+    print(f'running on {device}')
     # load LDR2HDR module     
     ldr2hdr_module = LDR2HDR()
     ldr2hdr_module.load_state_dict(torch.load(args.ldr2hdr_model, map_location=torch.device('cpu'))['state_dict_G'])

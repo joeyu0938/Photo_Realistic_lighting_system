@@ -1,0 +1,48 @@
+目的: 將一張 360 的 LDR 圖片透過機器學習生成光源所在位置用來優化渲染並應用到 AR 中
+
+環境建置 : open bash -> command: sh create_env.sh
+
+
+進入環境 : source ./env/Scripts/activate
+!!!第一次執行要等待model下載 而 yolo hub 下載完後要去 user/.cache/hub/yolo 裡面將numpy版本最高限制解除不然會有版本限制  
+
+pretrained model - 在models底下
+
+input: 360 LDR 圖片
+       -放在 ./Scripts/LDR2HDR/images_LDR 下
+
+執行: 在 Project 目錄下執行
+
+    -執行 python ./Scripts/LDR2HDR/LDR2HDRinference.py: 將 LDR 圖片轉換成 HDR
+        ~ HDR結果存在 ./Scripts/LDR2HDR/images_HDR
+        ~ HDR_nolight結果存在 ./Scripts/LDR2HDR/HDR_nolight
+        ~ LDR 存在 ./Scripts/LDR2HDR/images_LDR
+
+    -執行 python ./Scripts/Depth/Trans_depth.py: 將 LDR 轉換成 Depth 
+        ~ Depth結果存在 ./Scripts/light_detector/to_predict/*.npy
+        ~ Depth View 結果存在 ./Scripts/light_detector/to_predict/*.jpg
+    
+    -執行 python ./Scripts/light_detector/Filter_pytorch.py: 將 HDR 轉換成 Gradient
+        ~ Gradient結果存在 ./Scripts/light_detector/to_predict
+    
+    -執行 python ./Scripts/light_detector/Yolo.py: 將 Gradient 轉換成 object detection 和 Median cut 後的json
+        ~ 預測輸出圖結果存在 ./Scripts/light_detector/pediction_view
+        ~ Median cut 結果存在 ./Scripts/light_detector/data
+    
+    -執行 python inference.py: 完成所有結果
+
+    -執行 python server.py: 開啟server
+
+output: 在 output資料夾底下 只輸出upload檔名的檔案
+
+    output 檔名的都是輸出到 Unity 端的
+        - output.hdr - HDR no light (delete strong light)
+        - output.json - Data of light 
+        - output.npy - data of Depth
+    origin - Input LDR
+    LDR2HDR - HDR from LDR2HDR network
+    gradient - after Linear regression from Filter_pytorch.py
+    detect - after Object detection from yolo.py
+    depth - Depth view after Trans_depth.py 
+
+input: 當執行python inference.py的時候會自動將input 裡面的LDR自動拉到執行目錄

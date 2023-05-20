@@ -1,1 +1,0 @@
-Output from linear regression filter(趨勢)

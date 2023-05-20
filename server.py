@@ -6,7 +6,7 @@ import io
 import glob
 from inference import start
 
-DOWNLOAD_FOLDER = './Loader/images_LDR'
+DOWNLOAD_FOLDER = './Scripts/LDR2HDR/images_LDR'
 app = Flask(__name__)
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 app.config['UPLOAD_FOLDER'] = './'
@@ -14,12 +14,15 @@ app.config['UPLOAD_FOLDER'] = './'
 #file upload
 @app.route('/uploader', methods = ['GET','POST'])
 def upload_file():
-    delete_file = glob.glob(f'./*/*/*.jpg')
-    delete_file.extend(glob.glob(f'./*/*.exr'))
-    delete_file.extend(glob.glob(f'./*/*/*.exr'))
+    delete_file = glob.glob(f'./*/*/*/*.jpg')
+    delete_file.extend(glob.glob(f'./*/*/*/*.exr'))
+    delete_file.extend(glob.glob(f'./*/*/*/*.npy'))
+    delete_file.extend(glob.glob(f'./*/*/*/*.hdr'))
+    delete_file.extend(glob.glob(f'./*/*/*/*.json'))
     print(delete_file)
     for i in delete_file:
         os.remove(i) 
+        pass
     print(f'finish clearing file:\n {delete_file} ')
     #改成用byte位元組來拚圖片就可以了
     f = request.files['file']
