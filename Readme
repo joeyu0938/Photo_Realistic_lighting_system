@@ -4,7 +4,7 @@
 
 
 進入環境 : source ./env/Scripts/activate
-!!!第一次執行要等待model下載 而 yolo hub 下載完後要去 user/.cache/hub/yolo 裡面將numpy版本最高限制解除不然會有版本限制  
+
 
 pretrained model - 在models底下
 
@@ -29,13 +29,13 @@ input: 360 LDR 圖片
         ~ 預測輸出圖結果存在 ./Scripts/light_detector/pediction_view
         ~ Median cut 結果存在 ./Scripts/light_detector/data
     
-    -執行 python inference.py: 完成所有結果
+    -執行 python inference.py: 完成所有結果 !!!第一次執行要等待model下載 而 yolo hub 下載完後要去 user/.cache/hub/yolo 裡面將numpy版本最高限制解除不然會有版本限制  
 
-    -執行 python server.py: 開啟server
+    -執行 python server.py: 開啟server 
 
 output: 在 output資料夾底下 只輸出upload檔名的檔案
 
-    output 檔名的都是輸出到 Unity 端的
+    output檔名的都是輸出到 Unity 端的
         - output.hdr - HDR no light (delete strong light)
         - output.json - Data of light 
         - output.npy - data of Depth

@@ -113,7 +113,7 @@ def draw(t,file_name,RGBIMAGE,parser):
     t[:,:,0] = (t[:,:,0] - t[:,:,0].min()) / (t[:,:,0].max() - t[:,:,0].min())
     t[:,:,1] = (t[:,:,1] - t[:,:,1].min()) / (t[:,:,1].max() - t[:,:,1].min())
     t[:,:,2] = (t[:,:,2] - t[:,:,2].min()) / (t[:,:,2].max() - t[:,:,2].min())
-    dst = cv2.addWeighted(t,0.5,RGB,0.5,0.0)
+    dst = cv2.addWeighted(t,0.5,RGB,0.5,gamma= -0.15)
     # 直接轉換成jpg 然後clip 的filter會比tonemapping 的好
     t = np.clip(dst * 255, 0, 255).astype('uint8')  
     # cv2.imwrite(f'{parser.tend_output}/{file_name}.jpg', t)
